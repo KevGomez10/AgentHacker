@@ -1,0 +1,12 @@
+[2026-01-02 12:03:40.833533] CPU: 29.7%  RAM: 73.2%  DISK: 51.3%
+[2026-01-02 12:06:07.848906] ⚠️ ALERTA — CPU 88.9% RAM 73.5%
+[2026-01-02 12:08:16.508157] ⚠️ ALERTA — CPU 95.1% RAM 75.2%
+[2026-01-05 12:06:10.132829] ⚠️ ALERTA — CPU 67.1% RAM 91.9%
+[2026-01-05 12:06:23.979794] CPU: 70.3%  RAM: 90.9%  DISK: 51.5%
+[2026-01-05 12:06:47.599548] ⚠️ ALERTA — CPU 47.5% RAM 91.6%
+[2026-01-05 12:08:38.803967] 🚀 Optimización iniciada por el usuario
+[2026-01-05 12:08:43.764147] 🚀 Optimización iniciada por el usuario
+[2026-01-05 12:08:58.297065] 🧹 Archivos temporales eliminados: 6811
+[2026-01-05 12:08:58.302066] 🧹 Archivos temporales eliminados: 8544
+[2026-01-05 12:09:34.386622] ♻ Papelera vaciada
+[2026-01-05 12:09:35.715406] ♻ Papelera vaciada
