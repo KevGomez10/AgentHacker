@@ -1,4 +1,4 @@
-# 🟢 Matrix Windows Optimization Agent
+# 🟢 Boostx Windows Optimization Agent
 
 ![Status](https://img.shields.io/badge/status-active-brightgreen)
 ![Python](https://img.shields.io/badge/python-3.10%2B-blue)
