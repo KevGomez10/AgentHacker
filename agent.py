@@ -4,44 +4,84 @@ import time
 import threading
 import shutil
 import ctypes
+import subprocess
+import json
 from datetime import datetime
+from colorama import Fore, Style, init
+
+init(autoreset=True)
 
 
 # ==========================
-# LOG
+# JSON LOG PRO
 # ==========================
-def log(message):
-    with open("agent_log.txt", "a", encoding="utf-8") as file:
-        file.write(f"[{datetime.now()}] {message}\n")
+def log_json(event, data=None):
+    entry = {
+        "timestamp": str(datetime.now()),
+        "event": event,
+        "data": data
+    }
+
+    with open("agent_log.json", "a", encoding="utf-8") as f:
+        f.write(json.dumps(entry, ensure_ascii=False) + "\n")
 
 
 # ==========================
-# BANNER
+# ADMIN CHECK
+# ==========================
+def is_admin():
+    try:
+        return ctypes.windll.shell32.IsUserAnAdmin()
+    except:
+        return False
+
+
+# ==========================
+# STEALTH MODE (optional)
+# ==========================
+def enable_stealth():
+    try:
+        ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0)
+    except:
+        pass
+
+
+# ==========================
+# ANIMACION
+# ==========================
+def slow_print(text, delay=0.02):
+    for c in text:
+        print(Fore.GREEN + c, end="", flush=True)
+        time.sleep(delay)
+    print()
+
+
+# ==========================
+# BANNER MATRIX
 # ==========================
 def show_banner():
     os.system("cls" if os.name == "nt" else "clear")
 
     banner = r"""
-   █████╗  ██████╗ ███████╗ ████████╗
-  ██╔══██╗██╔════╝ ██╔════╝ ╚══██╔══╝
-  ███████║██║  ███╗█████╗      ██║   
-  ██╔══██║██║   ██║██╔══╝      ██║   
-  ██║  ██║╚██████╔╝███████╗    ██║   
-  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝    ╚═╝   
-     Windows Optimization Agent
+██████╗  ██████╗  ██████╗ ███████╗████████╗██╗  ██╗
+██╔══██╗██╔═══██╗██╔═══██╗██╔════╝╚══██╔══╝╚██╗██╔╝
+██████╔╝██║   ██║██║   ██║███████╗   ██║    ╚███╔╝ 
+██╔══██╗██║   ██║██║   ██║╚════██║   ██║    ██╔██╗ 
+██████╔╝╚██████╔╝╚██████╔╝███████║   ██║   ██╔╝ ██╗
+╚═════╝  ╚═════╝  ╚═════╝ ╚══════╝   ╚═╝   ╚═╝  ╚═╝
+     SISTMA DE OPTIMIZACIÓN AUTOMÁTICA
     """
 
-    print(banner)
-    print("   By: Kevin Gómez")
-    print("   Año: 2026\n")
-    print("======================================\n")
+    print(Fore.GREEN + banner)
+    print(Fore.GREEN + "      By Kevin Gomez")
+    print(Fore.GREEN + "      Año: 2026")
+    print(Fore.GREEN + "=====================================\n")
 
 
 # ==========================
-# MONITOR
+# MONITOR AUTOMÁTICO
 # ==========================
 stop_monitor = False
-
 
 def background_monitor():
     while not stop_monitor:
@@ -49,174 +89,144 @@ def background_monitor():
         ram = psutil.virtual_memory().percent
 
         if cpu > 85 or ram > 90:
-            log(f"ALERTA — CPU {cpu}% RAM {ram}%")
+            log_json("alert", {"cpu": cpu, "ram": ram})
+            print(Fore.GREEN + "\n⚠ Rendimiento alto detectado")
+            print(Fore.GREEN + f"CPU: {cpu}%  RAM: {ram}%")
 
-            print("\n\nHe notado que tu PC está un poco lenta...")
-            print(f"   CPU: {cpu}%   RAM: {ram}%")
-
-            choice = input("\n¿Quieres que intente optimizarla? (s/n): ")
-
-            if choice.lower() == "s":
+            c = input(Fore.GREEN + "\n¿Optimizar ahora? (s/n): ")
+            if c.lower() == "s":
                 optimize_system()
 
-        time.sleep(3)
+        time.sleep(4)
 
 
 # ==========================
-# LIMPIAR TEMPORALES
+# LIMPIEZAS
 # ==========================
 def clean_temp():
-    temp_paths = [
-        os.getenv("TEMP"),
-        os.getenv("TMP"),
-        "C:\\Windows\\Temp"
-    ]
-
     deleted = 0
-
-    for path in temp_paths:
+    for path in [os.getenv("TEMP"), os.getenv("TMP"), "C:\\Windows\\Temp"]:
         if path and os.path.exists(path):
-            for root, dirs, files in os.walk(path):
-                for name in files:
+            for root, _, files in os.walk(path):
+                for f in files:
                     try:
-                        os.remove(os.path.join(root, name))
+                        os.remove(os.path.join(root, f))
                         deleted += 1
                     except:
                         pass
 
-    log(f"Archivos temporales eliminados: {deleted}")
-    print(f"Archivos temporales eliminados: {deleted}")
+    slow_print(f"Eliminados {deleted} temporales")
+    log_json("temp_clean", {"deleted": deleted})
 
 
-# ==========================
-# VACIAR PAPELERA
-# ==========================
-def empty_recycle_bin():
+def empty_recycle():
     try:
         ctypes.windll.shell32.SHEmptyRecycleBinW(None, None, 0)
-        log("♻ Papelera vaciada")
-        print("♻ Papelera vaciada")
+        slow_print("♻ Papelera vaciada")
+        log_json("recycle_bin", "emptied")
     except:
-        print("⚠ No se pudo vaciar la papelera (permiso denegado)")
+        pass
 
 
 # ==========================
-# MOSTRAR PROCESOS PESADOS
+# PROCESOS PESADOS
 # ==========================
-def close_heavy_processes():
-    print("\nBuscando procesos pesados...\n")
+def close_heavy():
+    slow_print("\nBuscando procesos pesados...\n")
 
     heavy = []
-
     for p in psutil.process_iter(['name', 'cpu_percent']):
         try:
-            if p.info['cpu_percent'] > 20:
+            if p.info['cpu_percent'] > 25:
                 heavy.append(p)
         except:
             pass
 
     if not heavy:
-        print("No hay procesos pesados.")
+        slow_print("Nada grave")
         return
 
     for p in heavy:
-        print(f"⚠ {p.info['name']} — {p.info['cpu_percent']}% CPU")
+        print(Fore.GREEN + f"{p.info['name']} — {p.info['cpu_percent']}% CPU")
 
-    choice = input("\n¿Deseas cerrar estos procesos? (s/n): ")
-
-    if choice.lower() == "s":
+    c = input(Fore.GREEN + "\nCerrar? (s/n): ")
+    if c.lower() == "s":
         for p in heavy:
             try:
                 p.terminate()
             except:
                 pass
-
-        log("Procesos pesados cerrados")
-        print("\nProcesos cerrados")
+        slow_print("✔ Procesos cerrados")
+        log_json("heavy_processes_closed")
 
 
 # ==========================
-# OPTIMIZACIÓN REAL
+# OPTIMIZACIÓN TOTAL
 # ==========================
 def optimize_system():
-    print("\nIniciando optimización segura...\n")
-    log("Optimización iniciada por el usuario")
+    slow_print("\nOPTIMIZACIÓN EN CURSO\n", 0.01)
+
+    log_json("optimize_start")
 
     clean_temp()
-    empty_recycle_bin()
-    close_heavy_processes()
+    empty_recycle()
+    close_heavy()
 
-    print("\nOptimización completada")
-    input("\nPresiona ENTER para volver...")
+    slow_print("\nOptimización completada")
 
-
-# ==========================
-# ESCANEO
-# ==========================
-def scan_system():
-    os.system("cls" if os.name == "nt" else "clear")
-    print("\n[!] Escaneando el sistema...\n")
-
-    cpu_usage = psutil.cpu_percent(interval=1)
-    ram = psutil.virtual_memory()
-    disk = psutil.disk_usage('/')
-
-    log(f"CPU: {cpu_usage}%  RAM: {ram.percent}%  DISK: {disk.percent}%")
-
-    print(f"Uso CPU: {cpu_usage}%")
-    print(f"RAM usada: {ram.percent}%")
-    print(f"Uso del disco: {disk.percent}%")
-
-    input("\nPresiona ENTER para volver...")
+    if is_admin():
+        c = input(Fore.GREEN + "\n¿Reiniciar ahora? (s/n): ")
+        if c.lower() == "s":
+            os.system("shutdown /r /t 5")
+    else:
+        slow_print("\n⚠ Ejecuta como administrador para reinicio automático")
 
 
 # ==========================
-# LOGS
+# SCAN
 # ==========================
-def show_logs():
-    os.system("cls" if os.name == "nt" else "clear")
+def scan():
+    cpu = psutil.cpu_percent(interval=1)
+    ram = psutil.virtual_memory().percent
+    disk = psutil.disk_usage('/').percent
 
-    try:
-        with open("agent_log.txt", "r", encoding="utf-8") as file:
-            print(file.read())
-    except:
-        print("No hay logs aún.")
+    slow_print(f"\nCPU: {cpu}%")
+    slow_print(f"RAM: {ram}%")
+    slow_print(f"DISCO: {disk}%")
 
-    input("\nENTER para volver...")
+    log_json("scan", {"cpu": cpu, "ram": ram, "disk": disk})
 
 
 # ==========================
 # MENU
 # ==========================
-def main_menu():
+def main():
     global stop_monitor
+
+    if "--stealth" in os.sys.argv:
+        enable_stealth()
+
     monitor = threading.Thread(target=background_monitor, daemon=True)
     monitor.start()
 
     while True:
         show_banner()
 
-        print("[1] Escanear rendimiento del sistema")
-        print("[2] Optimizar sistema (real)")
-        print("[3] Ver logs")
-        print("[4] Salir\n")
+        print(Fore.GREEN + "[1] Escanear sistema")
+        print(Fore.GREEN + "[2] Optimización total")
+        print(Fore.GREEN + "[3] Salir\n")
 
-        choice = input("Selecciona una opción: ")
+        c = input(Fore.GREEN + "Selecciona: ")
 
-        if choice == "1":
-            scan_system()
-        elif choice == "2":
+        if c == "1":
+            scan()
+            input("\nENTER...")
+        elif c == "2":
             optimize_system()
-        elif choice == "3":
-            show_logs()
-        elif choice == "4":
+        elif c == "3":
             stop_monitor = True
             break
 
 
-# ==========================
-# START
-# ==========================
 if __name__ == "__main__":
-    main_menu()
-    print("\n¡Hasta luego! Gracias por usar el Agente de Optimización.")
+    main()
