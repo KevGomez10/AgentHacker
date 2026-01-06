@@ -1,6 +1,0 @@
-{"timestamp": "2026-01-05 12:45:20.696315", "event": "alert", "data": {"cpu": 31.2, "ram": 95.9}}
-{"timestamp": "2026-01-05 12:51:23.617635", "event": "scan", "data": {"cpu": 63.3, "ram": 96.5, "disk": 51.2}}
-{"timestamp": "2026-01-05 12:51:27.154875", "event": "optimize_start", "data": null}
-{"timestamp": "2026-01-05 12:51:28.355391", "event": "temp_clean", "data": {"deleted": 14}}
-{"timestamp": "2026-01-05 12:51:32.530264", "event": "recycle_bin", "data": "emptied"}
-{"timestamp": "2026-01-05 12:51:49.155687", "event": "alert", "data": {"cpu": 91.6, "ram": 95.9}}
